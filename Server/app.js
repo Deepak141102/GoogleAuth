@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001; 
+const PORT = process.env.PORT || 5001;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,6 +67,7 @@ app.get('/auth/google/callback',
 app.get('/logout', (req, res, next) => {
     req.logout((err) => {
         if (err) return next(err);
+        // Broadcast logout event to other tabs
         res.redirect('/');
     });
 });
@@ -77,6 +78,16 @@ app.get('/user', (req, res) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
     res.json(req.user);
+});
+
+// Middleware to protect the home route
+app.get('/home', (req, res, next) => {
+    if (!req.isAuthenticated()) {
+        // User is not authenticated, redirect to login page
+        return res.redirect('/');
+    }
+    // User is authenticated, serve the home page
+    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
 // Serve static files for the React app
